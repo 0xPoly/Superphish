@@ -7,9 +7,13 @@ This script to silently intercepts SSL connections made computers infected with 
 * ARP poisoning
 * SSL interception with Superfish CA keys
 
-Usage:
+To target all clients on network:
 
-    ./superphish -l logfile gateway-ip target-ip
+    ./superphish.sh interface gateway-ip
+    
+Specific target:
+
+    ./superphish.sh -l logfile gateway-ip target-ip
 
 Needed dependecies will be install automatically at first run.
 
