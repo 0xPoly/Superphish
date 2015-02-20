@@ -1,6 +1,7 @@
 #!/bin/bash
 
 PKGSTOINSTALL="sslsniff"
+LISTENPORT=8775
 
 # Install required dependencies
 if ! which sslsniff > /dev/null ; then
@@ -41,3 +42,9 @@ if ! which sslsniff > /dev/null ; then
 		echo "WARNING: Some dependencies may be missing. So, please, install manually ${DEPENDENCIES[*]}."
 	fi
 fi
+
+# Activate ip_forward mode
+sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
+
+#
+sudo iptables -t nat -A PREROUTING -p tcp --destination-port 443 -j REDIRECT --to-ports $LISTENPORT
